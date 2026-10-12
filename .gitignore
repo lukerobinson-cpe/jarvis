@@ -1,0 +1,26 @@
+# Personal data: never commit
+config.json
+academic_calendar.json
+instructions.txt
+vocabulary.txt
+journal.jsonl
+learning-state.json
+improvements.md
+suggestions.md
+tune-up-report.md
+phone-auth.json
+verses.json
+mic-muted
+voice_off
+restart-requested
+*.log
+
+# Large or generated files
+models/
+samples/
+study-index/
+backups/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
