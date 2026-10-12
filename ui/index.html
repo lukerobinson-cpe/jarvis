@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>J.A.R.V.I.S.</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<style>
+  :root {
+    --red: 255, 45, 45;
+    --hot: 255, 130, 110;
+    --text: #ffd9d4;
+    --dim: rgba(var(--red), .55);
+    --line: rgba(var(--red), .35);
+    --bg: #070203;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background:
+      radial-gradient(ellipse at 50% 50%, rgba(var(--red), .09), transparent 60%),
+      repeating-linear-gradient(0deg, rgba(var(--red), .035) 0 1px, transparent 1px 44px),
+      repeating-linear-gradient(90deg, rgba(var(--red), .035) 0 1px, transparent 1px 44px),
+      var(--bg);
+    color: var(--text);
+    font-family: "Bahnschrift", "Segoe UI", system-ui, sans-serif;
+    letter-spacing: .12em;
+    overflow: hidden;
+    user-select: none;
+  }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; }
+
+  #core {
+    position: fixed; transform: translate(-50%, -50%);
+    text-align: center; pointer-events: none;
+    text-shadow: 0 0 12px rgba(var(--red), .9);
+  }
+  #core .name { font-size: clamp(13px, 2.1vmin, 22px); letter-spacing: .34em; margin-right: -.34em; }
+  #core .state { margin-top: .6em; font-size: clamp(9px, 1.2vmin, 12px); color: rgb(var(--hot)); letter-spacing: .3em; margin-right: -.3em; }
+
+  .panel {
+    position: fixed; padding: 14px 16px; font-size: 11px; text-transform: uppercase;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(var(--red), .07), rgba(var(--red), .02));
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  }
+  .panel h2 { margin: 0 0 10px; font-size: 10px; font-weight: 400; color: var(--dim); letter-spacing: .3em; }
+
+  #status { top: 24px; left: 24px; width: 230px; }
+  #clock { font-size: 34px; letter-spacing: .08em; font-variant-numeric: tabular-nums; text-shadow: 0 0 14px rgba(var(--red), .8); }
+  #date { color: var(--dim); margin: 2px 0 14px; }
+  .row { display: flex; justify-content: space-between; padding: 5px 0; border-top: 1px solid rgba(var(--red), .15); }
+  .row span:first-child { color: var(--dim); }
+  .row .on { color: rgb(var(--hot)); }
+  .meter { height: 3px; margin-top: 10px; background: rgba(var(--red), .15); }
+  .meter i { display: block; height: 100%; width: 0; background: rgb(var(--red)); box-shadow: 0 0 8px rgb(var(--red)); }
+
+  #log { top: 24px; right: 24px; bottom: 96px; width: min(340px, 30vw); display: flex; flex-direction: column; }
+  #lines {
+    flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 12px;
+    text-transform: none; letter-spacing: .03em; font-size: 13px; line-height: 1.5; user-select: text;
+    -webkit-mask-image: linear-gradient(transparent, #000 22%); mask-image: linear-gradient(transparent, #000 22%);
+  }
+  .line b { display: block; font-size: 9px; font-weight: 400; letter-spacing: .3em; color: var(--dim); text-transform: uppercase; }
+  .line.you { color: rgba(255, 217, 212, .7); }
+  .line.jarvis { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  #ask {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+    width: min(560px, calc(100vw - 48px)); display: flex; align-items: center; gap: 10px;
+    padding: 0 14px; border: 1px solid var(--line); background: rgba(7, 2, 3, .8);
+  }
+  #ask::before { content: "›"; color: rgb(var(--red)); font-size: 18px; }
+  #ask input {
+    flex: 1; padding: 13px 0; border: 0; outline: 0; background: none;
+    color: var(--text); font: inherit; font-size: 13px; letter-spacing: .06em; user-select: text;
+  }
+  #ask input::placeholder { color: var(--dim); letter-spacing: .2em; font-size: 11px; }
+  #ask:focus-within { border-color: rgb(var(--red)); box-shadow: 0 0 18px rgba(var(--red), .35); }
+
+  button {
+    font: inherit; font-size: 10px; letter-spacing: .25em; text-transform: uppercase; cursor: pointer;
+    color: rgb(var(--hot)); background: rgba(7, 2, 3, .8); border: 1px solid var(--line); padding: 6px 10px;
+  }
+  button:hover, button:focus-visible { border-color: rgb(var(--red)); box-shadow: 0 0 14px rgba(var(--red), .4); outline: 0; }
+  #toggle { position: fixed; top: 34px; right: 36px; z-index: 2; }
+  #mic { white-space: nowrap; }
+  body.muted #mic { color: var(--bg); background: rgb(var(--red)); border-color: rgb(var(--red)); }
+  body.no-log #log { display: none; }
+  #interrupt { margin-top: 1.4em; pointer-events: auto; visibility: hidden; }
+  body.busy #interrupt { visibility: visible; }
+
+  .corner { position: fixed; width: 26px; height: 26px; border: 2px solid rgba(var(--red), .6); }
+  .corner.bl { left: 12px; bottom: 12px; border-right: 0; border-top: 0; }
+  .corner.br { right: 12px; bottom: 12px; border-left: 0; border-top: 0; }
+
+  @media (max-width: 820px) {
+    #status { display: none; }
+    #log { top: auto; left: 16px; right: 16px; bottom: 88px; width: auto; height: 34vh; }
+    #ask { bottom: 20px; }
+    #toggle { top: 16px; right: 16px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="hud"></canvas>
+
+<div id="core"><div class="name">J.A.R.V.I.S.</div><div class="state" id="state">CONNECTING</div><button id="interrupt" type="button">Interrupt · Esc</button></div>
+
+<section class="panel" id="status">
+  <div id="clock">--:--</div>
+  <div id="date"></div>
+  <div class="row"><span>Uplink</span><span id="uplink">—</span></div>
+  <div class="row"><span>Voice</span><span>Daniel</span></div>
+  <div class="row"><span>Wake word</span><span>Hey Jarvis</span></div>
+  <div class="row"><span>Microphone</span><span id="microw">—</span></div>
+  <div class="row"><span>Audio</span><span id="audio">Idle</span></div>
+  <div class="meter"><i id="meter"></i></div>
+</section>
+
+<button id="toggle" type="button" aria-controls="log">Hide</button>
+<section class="panel" id="log">
+  <h2>Transcript</h2>
+  <div id="lines"></div>
+</section>
+
+<form id="ask" autocomplete="off">
+  <input id="text" placeholder="SAY “HEY JARVIS” OR TYPE A REQUEST" aria-label="Type a request">
+  <button id="mic" type="button" title="Switch the microphone on or off (M)">Mic on</button>
+</form>
+
+<div class="corner bl"></div><div class="corner br"></div>
+
+<script>
+const TAU = Math.PI * 2, RED = '255,45,45', HOT = '255,130,110';
+const LABELS = { loading: 'INITIALISING', idle: 'STANDING BY', listening: 'LISTENING', thinking: 'PROCESSING', speaking: 'SPEAKING', offline: 'OFFLINE' };
+const SPEED = { loading: .15, idle: .25, listening: .6, thinking: 2.2, speaking: .8, offline: .04 };
+const S = { state: 'offline', muted: false, level: 0, mic: 0, envelope: null, envStart: 0, fps: 30 };
+const $ = id => document.getElementById(id);
+
+// ---- events from the listener ----
+function setState(state) {
+  S.state = state;
+  $('state').textContent = state === 'idle' && S.muted ? 'MICROPHONE OFF' : LABELS[state] || state.toUpperCase();
+  $('audio').textContent = state === 'listening' ? 'Microphone' : state === 'speaking' ? 'Voice out' : 'Idle';
+  if (state !== 'speaking') S.envelope = null;
+  if (state !== 'listening') S.mic = 0;
+  document.body.classList.toggle('busy', state === 'speaking' || state === 'thinking');
+}
+function addLine(who, text) {
+  const line = document.createElement('div');
+  line.className = 'line ' + who;
+  const label = document.createElement('b');
+  label.textContent = who === 'you' ? 'You' : 'Jarvis';
+  const body = document.createElement('span');
+  body.textContent = text;
+  line.append(label, body);
+  $('lines').append(line);
+  while ($('lines').children.length > 12) $('lines').firstChild.remove();
+}
+function connect() {
+  const source = new EventSource('/events');
+  source.onopen = () => { $('uplink').textContent = 'Online'; $('uplink').className = 'on'; };
+  source.onerror = () => { $('uplink').textContent = 'Offline'; $('uplink').className = ''; setState('offline'); };
+  source.onmessage = e => {
+    const m = JSON.parse(e.data);
+    if (m.type === 'state') setState(m.state);
+    else if (m.type === 'mic') setMuted(m.muted);
+    else if (m.type === 'level') S.mic = m.value;
+    else if (m.type === 'heard') addLine('you', m.text);
+    else if (m.type === 'reply') addLine('jarvis', m.text);
+    else if (m.type === 'speak') { S.envelope = m.envelope; S.fps = m.fps; S.envStart = performance.now(); }
+  };
+}
+$('ask').addEventListener('submit', e => {
+  e.preventDefault();
+  const text = $('text').value.trim();
+  if (!text) return;
+  $('text').value = '';
+  fetch('/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+});
+
+// ---- interrupt: stops Jarvis talking, or cancels a request in progress ----
+function interrupt() { fetch('/stop', { method: 'POST' }); }
+$('interrupt').addEventListener('click', interrupt);
+addEventListener('keydown', e => {
+  if (e.key === 'Escape') interrupt();
+  else if (e.target === $('text') || e.ctrlKey || e.altKey || e.metaKey) return;
+  else if (e.key.toLowerCase() === 't') toggleLog();
+  else if (e.key.toLowerCase() === 'm') toggleMic();
+});
+
+// ---- microphone switch (button or M): while off the listener closes the microphone,
+// so nothing is heard, wake word included. Shown as the listener reports it. ----
+function setMuted(muted) {
+  S.muted = muted;
+  document.body.classList.toggle('muted', muted);
+  $('mic').textContent = muted ? 'Mic off' : 'Mic on';
+  $('mic').setAttribute('aria-pressed', String(muted));
+  $('microw').textContent = muted ? 'Off' : 'On';
+  $('microw').className = muted ? '' : 'on';
+  $('text').placeholder = muted ? 'MICROPHONE OFF · TYPE A REQUEST' : 'SAY “HEY JARVIS” OR TYPE A REQUEST';
+  setState(S.state);
+}
+function toggleMic() {
+  fetch('/mic', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ muted: !S.muted }) });
+}
+$('mic').addEventListener('click', toggleMic);
+
+// ---- transcript panel: hide or show (button or T), remembered between runs ----
+function toggleLog(hidden = !document.body.classList.contains('no-log')) {
+  document.body.classList.toggle('no-log', hidden);
+  $('toggle').textContent = hidden ? 'Transcript' : 'Hide';
+  $('toggle').setAttribute('aria-expanded', String(!hidden));
+  try { localStorage.setItem('jarvis.hideLog', hidden ? '1' : ''); } catch {}
+  resize();
+}
+$('toggle').addEventListener('click', () => toggleLog());
+
+// ---- clock ----
+function tick() {
+  const now = new Date();
+  $('clock').textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  $('date').textContent = now.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+}
+setInterval(tick, 1000); tick();
+
+// ---- reactor ----
+const canvas = $('hud'), ctx = canvas.getContext('2d');
+let W, H, cx, cy, R;
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  W = innerWidth; H = innerHeight;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const narrow = W <= 820;
+  // on wide screens the reactor sits in the space left of the transcript panel
+  // and, when there is room, clear of the status panel too
+  const logWidth = $('log').offsetWidth;  // 0 while the transcript is hidden
+  const free = narrow || !logWidth ? W : W - logWidth - 24;
+  const left = narrow || !logWidth ? 0 : $('status').offsetWidth + 24, gap = free - left;
+  const roomy = gap >= 520;
+  cx = roomy ? left + gap / 2 : free / 2; cy = narrow ? H * .3 : H * .47;
+  R = Math.min((roomy ? gap : free) * (roomy ? .35 : .3), H * (narrow ? .2 : .3));
+  $('core').style.left = cx + 'px'; $('core').style.top = cy + 'px';
+  $('ask').style.left = cx + 'px';
+  $('ask').style.width = Math.min(560, free - 48) + 'px';
+}
+addEventListener('resize', resize); resize();
+
+function arc(r, a0, a1, width, alpha, colour = RED) {
+  ctx.beginPath(); ctx.arc(0, 0, r, a0, a1);
+  ctx.lineWidth = width; ctx.strokeStyle = `rgba(${colour},${alpha})`; ctx.stroke();
+}
+function segments(r, count, gap, rotation, width, alpha) {
+  const step = TAU / count;
+  for (let i = 0; i < count; i++) arc(r, rotation + i * step, rotation + (i + 1) * step - gap, width, alpha);
+}
+function targetLevel(t) {
+  if (S.state === 'speaking' && S.envelope) {
+    return S.envelope[Math.floor((performance.now() - S.envStart) / 1000 * S.fps)] || 0;
+  }
+  if (S.state === 'listening') return .12 + S.mic * .88;
+  if (S.state === 'thinking') return .3 + .15 * Math.sin(t * 5);
+  if (S.state === 'offline') return .02;
+  return .1 + .05 * Math.sin(t * 1.3);
+}
+
+let rotation = 0, last = 0;
+function frame(ms) {
+  const t = ms / 1000, dt = Math.min(t - last, .05); last = t;
+  rotation += dt * (SPEED[S.state] || .3);
+  S.level += (targetLevel(t) - S.level) * Math.min(1, dt * 14);
+  const L = S.level, dim = S.state === 'offline' ? .35 : 1;
+  // the meter shows real audio only; the idle and thinking pulses belong to the reactor
+  const live = S.state === 'listening' || S.state === 'speaking';
+  $('meter').style.width = (live ? L * 100 : 0).toFixed(0) + '%';
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.save(); ctx.translate(cx, cy); ctx.globalAlpha = dim;
+
+  const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, R * 2);
+  halo.addColorStop(0, `rgba(${RED},${.14 + L * .2})`); halo.addColorStop(1, `rgba(${RED},0)`);
+  ctx.fillStyle = halo; ctx.fillRect(-R * 2, -R * 2, R * 4, R * 4);
+
+  ctx.shadowColor = `rgba(${RED},.9)`; ctx.shadowBlur = 10;
+
+  // outer scale
+  for (let i = 0; i < 120; i++) {
+    const a = rotation * .2 + i * TAU / 120;
+    const len = R * (i % 10 === 0 ? .075 : i % 5 === 0 ? .045 : .022);
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * R * 1.3, Math.sin(a) * R * 1.3);
+    ctx.lineTo(Math.cos(a) * (R * 1.3 + len), Math.sin(a) * (R * 1.3 + len));
+    ctx.lineWidth = 1; ctx.strokeStyle = `rgba(${RED},${i % 5 === 0 ? .7 : .3})`; ctx.stroke();
+  }
+  arc(R * 1.27, 0, TAU, 1, .3);
+  segments(R * 1.17, 3, .55, -rotation * .6, R * .04, .55);
+  segments(R * 1.04, 60, .035, rotation * .4, R * .055, .2);
+  segments(R * .9, 4, .95, rotation * 1.3, 2, .85);
+  segments(R * .83, 2, 1.9, -rotation * 1.7, R * .022, .6);
+  if (S.state === 'thinking') arc(R * .97, rotation * 3, rotation * 3 + 1.3, R * .03, .95, HOT);
+
+  // voice ring
+  for (let i = 0; i < 96; i++) {
+    const a = i * TAU / 96 - Math.PI / 2;
+    const wobble = .5 + .5 * Math.sin(i * .9 + t * 6) * Math.sin(i * .37 - t * 3.1);
+    const height = R * (.015 + .24 * L * (.3 + .7 * wobble));
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * R * .52, Math.sin(a) * R * .52);
+    ctx.lineTo(Math.cos(a) * (R * .52 + height), Math.sin(a) * (R * .52 + height));
+    ctx.lineWidth = Math.max(1.5, R * .012); ctx.strokeStyle = `rgba(${HOT},${.45 + L * .55})`; ctx.stroke();
+  }
+  arc(R * .49, 0, TAU, 1.5, .75);
+
+  // core
+  const coreRadius = R * (.4 + L * .05);
+  const core = ctx.createRadialGradient(0, 0, 0, 0, 0, coreRadius);
+  core.addColorStop(0, `rgba(${RED},${.3 + L * .35})`); core.addColorStop(1, `rgba(${RED},.04)`);
+  ctx.fillStyle = core; ctx.beginPath(); ctx.arc(0, 0, coreRadius, 0, TAU); ctx.fill();
+  arc(coreRadius, 0, TAU, 2, .5 + L * .5);
+
+  ctx.restore();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+let hideLog = false;
+try { hideLog = localStorage.getItem('jarvis.hideLog') === '1'; } catch {}
+toggleLog(hideLog);
+connect();
+</script>
+</body>
+</html>

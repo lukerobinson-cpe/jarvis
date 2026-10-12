@@ -1,0 +1,19 @@
+{
+  "user_name": "Alex",
+  "city": "Charlotte",
+  "canvas_feed": "https://<your-school>.instructure.com/feeds/calendars/user_<private-token>.ics",
+  "apple_calendar": "webcal://<your published Apple calendar link>",
+  "courses": {
+    "ECGR 4101": "Advanced Embedded Systems",
+    "ECGR 4181": "Computer Architecture"
+  },
+  "study_folders": ["C:/Users/<you>/Documents/School"],
+  "vocabulary": ["STM32", "NUCLEO", "gem5", "MATLAB"],
+  "persona_notes": [
+    "{USER} enjoys sarcasm in casual talk, so use it there.",
+    "When the subject is coursework, be formal and thorough and explain so that {USER} understands, not merely gets the answer."
+  ],
+  "features": {
+    "bible": false
+  }
+}

@@ -1,0 +1,204 @@
+{
+ "name": "UNC Charlotte Academic Calendar 2026-27",
+ "source": "UNC Charlotte Office of the Registrar, Academic Year Fall 2026 - Summer 2027, https://registrar.charlotte.edu/calendars-schedules/academic-year-fall-2025-spring-2026-2/ (read 2026-10-04)",
+ "events": [
+  {
+   "start": "2026-10-05",
+   "end": "2026-10-05",
+   "title": "Unsatisfactory mid-term grade notices are emailed to students",
+   "no_classes": false
+  },
+  {
+   "start": "2026-10-08",
+   "end": "2026-10-08",
+   "title": "Last day to withdraw from a course, change grade type, or opt out of grade replacement",
+   "no_classes": false
+  },
+  {
+   "start": "2026-10-10",
+   "end": "2026-10-10",
+   "title": "Registration appointment times become available",
+   "no_classes": false
+  },
+  {
+   "start": "2026-10-12",
+   "end": "2026-10-13",
+   "title": "Student Recess",
+   "no_classes": true
+  },
+  {
+   "start": "2026-10-26",
+   "end": "2026-10-26",
+   "title": "Registration for Spring 2027 begins",
+   "no_classes": false
+  },
+  {
+   "start": "2026-10-30",
+   "end": "2026-10-30",
+   "title": "Weekday football game: classes starting at or after 2:30 PM are affected",
+   "no_classes": false
+  },
+  {
+   "start": "2026-11-11",
+   "end": "2026-11-11",
+   "title": "Veterans Day",
+   "no_classes": true
+  },
+  {
+   "start": "2026-11-25",
+   "end": "2026-11-28",
+   "title": "Thanksgiving Break",
+   "no_classes": true
+  },
+  {
+   "start": "2026-12-02",
+   "end": "2026-12-02",
+   "title": "Last day of classes",
+   "no_classes": false
+  },
+  {
+   "start": "2026-12-03",
+   "end": "2026-12-03",
+   "title": "Reading Day",
+   "no_classes": true
+  },
+  {
+   "start": "2026-12-04",
+   "end": "2026-12-05",
+   "title": "Final examinations",
+   "no_classes": true
+  },
+  {
+   "start": "2026-12-07",
+   "end": "2026-12-10",
+   "title": "Final examinations",
+   "no_classes": true
+  },
+  {
+   "start": "2026-12-11",
+   "end": "2026-12-12",
+   "title": "Fall Commencement",
+   "no_classes": true
+  },
+  {
+   "start": "2026-12-14",
+   "end": "2026-12-14",
+   "title": "Final grades are due at noon",
+   "no_classes": false
+  },
+  {
+   "start": "2026-12-24",
+   "end": "2026-12-31",
+   "title": "Winter Break, University closed",
+   "no_classes": true
+  },
+  {
+   "start": "2027-01-01",
+   "end": "2027-01-01",
+   "title": "New Year's Day, University closed",
+   "no_classes": true
+  },
+  {
+   "start": "2027-01-11",
+   "end": "2027-01-11",
+   "title": "First day of Spring 2027 classes",
+   "no_classes": false
+  },
+  {
+   "start": "2027-01-18",
+   "end": "2027-01-18",
+   "title": "Dr. Martin Luther King Jr. Day, University closed",
+   "no_classes": true
+  },
+  {
+   "start": "2027-01-19",
+   "end": "2027-01-19",
+   "title": "Last day to add, or drop with no grade",
+   "no_classes": false
+  },
+  {
+   "start": "2027-01-20",
+   "end": "2027-01-20",
+   "title": "Payment due date",
+   "no_classes": false
+  },
+  {
+   "start": "2027-01-25",
+   "end": "2027-01-25",
+   "title": "Census date, and last day to opt out of Niner Course Pack",
+   "no_classes": false
+  },
+  {
+   "start": "2027-02-11",
+   "end": "2027-02-11",
+   "title": "Deadline to apply for May 2027 graduation",
+   "no_classes": false
+  },
+  {
+   "start": "2027-03-01",
+   "end": "2027-03-01",
+   "title": "Unsatisfactory mid-term grade notices are emailed to students",
+   "no_classes": false
+  },
+  {
+   "start": "2027-03-08",
+   "end": "2027-03-13",
+   "title": "Spring Recess",
+   "no_classes": true
+  },
+  {
+   "start": "2027-03-15",
+   "end": "2027-03-15",
+   "title": "Last day to withdraw from a course, change grade type, or opt out of grade replacement",
+   "no_classes": false
+  },
+  {
+   "start": "2027-03-29",
+   "end": "2027-03-29",
+   "title": "Registration for Summer and Fall 2027 begins",
+   "no_classes": false
+  },
+  {
+   "start": "2027-04-09",
+   "end": "2027-04-10",
+   "title": "Refresh Weekend",
+   "no_classes": true
+  },
+  {
+   "start": "2027-04-28",
+   "end": "2027-04-28",
+   "title": "Last day of classes",
+   "no_classes": false
+  },
+  {
+   "start": "2027-04-29",
+   "end": "2027-04-29",
+   "title": "Reading Day",
+   "no_classes": true
+  },
+  {
+   "start": "2027-04-30",
+   "end": "2027-04-30",
+   "title": "Final examinations begin",
+   "no_classes": true
+  },
+  {
+   "start": "2027-05-03",
+   "end": "2027-05-06",
+   "title": "Final examinations",
+   "no_classes": true
+  },
+  {
+   "start": "2027-05-07",
+   "end": "2027-05-08",
+   "title": "Spring Commencement",
+   "no_classes": true
+  },
+  {
+   "start": "2027-05-10",
+   "end": "2027-05-10",
+   "title": "Grades are due at noon; the academic year ends",
+   "no_classes": false
+  }
+ ]
+}

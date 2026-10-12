@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash",
+      "PowerShell",
+      "Edit",
+      "Write",
+      "NotebookEdit",
+      "Read",
+      "Glob",
+      "Grep",
+      "WebSearch",
+      "WebFetch"
+    ],
+    "deny": [
+      "Bash(rm -r *)",
+      "Bash(rm -rf *)",
+      "Bash(rm -fr *)",
+      "Bash(rmdir /s*)",
+      "Bash(del /s*)",
+      "Bash(format *)",
+      "Bash(shutdown*)",
+      "Bash(reg delete*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean*)",
+      "PowerShell(Remove-Item -Recurse*)",
+      "PowerShell(Remove-Item * -Recurse*)",
+      "PowerShell(rm -r*)",
+      "PowerShell(rm * -r*)",
+      "PowerShell(Format-Volume*)",
+      "PowerShell(Clear-Disk*)",
+      "PowerShell(Stop-Computer*)",
+      "PowerShell(Restart-Computer*)",
+      "PowerShell(shutdown*)",
+      "PowerShell(reg delete*)",
+      "PowerShell(git push --force*)",
+      "PowerShell(git reset --hard*)"
+    ]
+  }
+}

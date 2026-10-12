@@ -1,0 +1,12 @@
+# Jarvis runs on Windows 10/11 with Python 3.12. Ollama (https://ollama.com) runs the language model separately.
+numpy>=2.0
+sounddevice>=0.5
+soundfile>=0.12
+faster-whisper>=1.2
+openwakeword>=0.6
+kokoro-onnx>=0.6
+onnxruntime>=1.20
+pypdf>=6.0
+pypdfium2>=4.30
+pystray>=0.19
+pillow>=11.0

@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jarvis">
+<meta name="theme-color" content="#070203">
+<title>J.A.R.V.I.S.</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<style>
+  :root {
+    --red: 255, 45, 45;
+    --hot: 255, 130, 110;
+    --text: #ffd9d4;
+    --dim: rgba(var(--red), .55);
+    --line: rgba(var(--red), .35);
+    --bg: #070203;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background:
+      radial-gradient(ellipse at 50% 34%, rgba(var(--red), .1), transparent 60%),
+      repeating-linear-gradient(0deg, rgba(var(--red), .035) 0 1px, transparent 1px 44px),
+      repeating-linear-gradient(90deg, rgba(var(--red), .035) 0 1px, transparent 1px 44px),
+      var(--bg);
+    color: var(--text);
+    font-family: "Bahnschrift", "Avenir Next Condensed", "Helvetica Neue", system-ui, sans-serif;
+    letter-spacing: .12em;
+    overflow: hidden;
+    user-select: none; -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; }
+
+  /* the reactor is the talk button */
+  #talk {
+    position: fixed; transform: translate(-50%, -50%); border-radius: 50%;
+    border: 0; background: none; padding: 0; color: inherit; font: inherit; letter-spacing: inherit;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-shadow: 0 0 12px rgba(var(--red), .9);
+  }
+  #talk:focus-visible { outline: 1px solid rgb(var(--red)); }
+  #talk .name { font-size: 15px; letter-spacing: .34em; margin-right: -.34em; }
+  #talk .state { margin-top: .7em; font-size: 10px; color: rgb(var(--hot)); letter-spacing: .3em; margin-right: -.3em; }
+  #hint {
+    position: fixed; left: 0; right: 0; text-align: center; font-size: 10px; letter-spacing: .3em;
+    color: var(--dim); text-transform: uppercase; pointer-events: none;
+  }
+  #stop {
+    position: fixed; left: 50%; transform: translateX(-50%); visibility: hidden;
+    font: inherit; font-size: 11px; letter-spacing: .25em; text-transform: uppercase;
+    color: rgb(var(--hot)); background: rgba(7, 2, 3, .8); border: 1px solid var(--line); padding: 10px 18px;
+  }
+  body.busy #stop { visibility: visible; }
+
+  #lines {
+    position: fixed; left: 16px; right: 16px; bottom: calc(78px + env(safe-area-inset-bottom));
+    max-height: 30vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+    letter-spacing: .03em; font-size: 14px; line-height: 1.45;
+    user-select: text; -webkit-user-select: text;
+    -webkit-mask-image: linear-gradient(transparent, #000 18%); mask-image: linear-gradient(transparent, #000 18%);
+  }
+  #lines > :first-child { margin-top: auto; }
+  .line b { display: block; font-size: 9px; font-weight: 400; letter-spacing: .3em; color: var(--dim); text-transform: uppercase; }
+  .line.you { color: rgba(255, 217, 212, .7); }
+  .line.jarvis { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  #ask {
+    position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom));
+    display: flex; align-items: center; gap: 10px; padding: 0 14px;
+    border: 1px solid var(--line); background: rgba(7, 2, 3, .85);
+  }
+  #ask::before { content: "›"; color: rgb(var(--red)); font-size: 18px; }
+  #ask input, #lock input {
+    flex: 1; min-width: 0; padding: 13px 0; border: 0; outline: 0; background: none; border-radius: 0;
+    color: var(--text); font: inherit; font-size: 16px; letter-spacing: .04em;  /* 16px stops the iPhone zooming in */
+    user-select: text; -webkit-user-select: text;
+  }
+  #ask input::placeholder, #lock input::placeholder { color: var(--dim); letter-spacing: .18em; font-size: 11px; }
+  #ask:focus-within { border-color: rgb(var(--red)); box-shadow: 0 0 18px rgba(var(--red), .35); }
+
+  #lock {
+    position: fixed; inset: 0; z-index: 5; display: none; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; padding: 24px; background: rgba(7, 2, 3, .94); text-align: center;
+  }
+  body.locked #lock { display: flex; }
+  #lock h1 { margin: 0; font-size: 16px; font-weight: 400; letter-spacing: .34em; text-shadow: 0 0 12px rgba(var(--red), .9); }
+  #lock p { margin: 0; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); min-height: 1.4em; }
+  #lock form { display: flex; width: min(320px, 100%); border: 1px solid var(--line); padding: 0 14px; }
+  #lock input { text-align: center; letter-spacing: .3em; }
+  #lock button {
+    font: inherit; font-size: 11px; letter-spacing: .25em; text-transform: uppercase;
+    color: rgb(var(--hot)); background: none; border: 1px solid var(--line); padding: 12px 22px;
+  }
+  #lock .error { color: rgb(var(--hot)); }
+</style>
+</head>
+<body class="locked">
+<canvas id="hud"></canvas>
+
+<button id="talk" type="button" aria-label="Talk to Jarvis">
+  <span class="name">J.A.R.V.I.S.</span>
+  <span class="state" id="state">CONNECTING</span>
+</button>
+<div id="hint">Tap to talk</div>
+<button id="stop" type="button">Stop</button>
+
+<div id="lines"></div>
+<form id="ask" autocomplete="off">
+  <input id="text" placeholder="OR TYPE A REQUEST" aria-label="Type a request" enterkeyhint="send">
+</form>
+
+<div id="lock">
+  <h1>J.A.R.V.I.S.</h1>
+  <p id="lockmsg">Connecting</p>
+  <form id="lockform" autocomplete="off">
+    <input id="passcode" type="password" aria-label="Passcode" autocomplete="off">
+  </form>
+  <button id="unlock" type="submit" form="lockform">Unlock</button>
+</div>
+
+<script>
+const TAU = Math.PI * 2, RED = '255,45,45', HOT = '255,130,110';
+const LABELS = { loading: 'INITIALISING', idle: 'STANDING BY', listening: 'LISTENING', thinking: 'PROCESSING', speaking: 'SPEAKING', offline: 'OFFLINE' };
+const SPEED = { loading: .15, idle: .25, listening: .6, thinking: 2.2, speaking: .8, offline: .04 };
+const HINTS = { idle: 'Tap to talk', listening: 'Tap to send', thinking: '', speaking: 'Tap to interrupt', offline: 'Laptop not reachable', loading: '' };
+const SPEECH_RATE = 16000;     // what the laptop's speech recogniser takes
+const QUIET_ENDS = 1.4;        // seconds of quiet after speech that send the request
+const GIVE_UP = 7, LONGEST = 30;  // seconds: nothing said, and the most one request may last
+const NEVER = -1e9;
+const S = { server: 'offline', level: 0, mic: 0, recording: false, sent: NEVER };  // sent: when the last request left this phone
+const $ = id => document.getElementById(id);
+const post = (path, body, type = 'application/json') =>
+  fetch(path, { method: 'POST', headers: { 'X-Jarvis': 'phone', 'Content-Type': type }, body })
+    .then(r => { if (r.status === 401 && path !== '/auth') lock(); return r; });
+
+// ---- what the reactor shows: this phone's own doing first, then the laptop's state ----
+function state() {
+  if (S.recording) return 'listening';
+  if (playing()) return 'speaking';
+  if (S.server === 'offline') return 'offline';
+  if (performance.now() - S.sent < 4000 && S.server === 'idle') return 'thinking';  // sent, and the laptop has yet to say so
+  return S.server === 'listening' ? 'idle' : S.server;  // the laptop's own microphone is not this phone's
+}
+function show() {
+  const now = state();
+  if (now === show.last) return;
+  show.last = now;
+  $('state').textContent = LABELS[now] || now.toUpperCase();
+  $('hint').textContent = HINTS[now] ?? '';
+  document.body.classList.toggle('busy', now === 'speaking' || now === 'thinking');
+}
+function addLine(who, text) {
+  const line = document.createElement('div');
+  line.className = 'line ' + who;
+  const label = document.createElement('b');
+  label.textContent = who === 'you' ? 'You' : 'Jarvis';
+  const body = document.createElement('span');
+  body.textContent = text;
+  line.append(label, body);
+  $('lines').append(line);
+  while ($('lines').children.length > 12) $('lines').firstChild.remove();
+  $('lines').scrollTop = $('lines').scrollHeight;
+}
+
+// ---- passcode: set on the first visit, asked for once on each phone after that ----
+let source = null;
+function lock(message) {
+  if (source) { source.close(); source = null; }
+  document.body.classList.add('locked');
+  fetch('/session').then(r => r.json()).then(s => {
+    if (s.ok) return unlock();
+    $('lockmsg').className = message ? 'error' : '';
+    $('lockmsg').textContent = message || (s.set ? 'Enter your passcode' : 'Choose a passcode for this phone');
+    $('unlock').textContent = s.set ? 'Unlock' : 'Set passcode';
+    $('passcode').autocomplete = s.set ? 'current-password' : 'new-password';
+  }).catch(() => { $('lockmsg').className = 'error'; $('lockmsg').textContent = 'Laptop not reachable'; setTimeout(lock, 5000); });
+}
+function unlock() {
+  document.body.classList.remove('locked');
+  $('passcode').value = '';
+  $('passcode').blur();
+  connect();
+}
+$('lockform').addEventListener('submit', async e => {
+  e.preventDefault();
+  sound();  // a tap, so the phone will let Jarvis be heard later
+  const r = await post('/auth', JSON.stringify({ passcode: $('passcode').value })).catch(() => null);
+  if (r && r.status === 204) return unlock();
+  $('passcode').value = '';
+  lock(!r ? 'Laptop not reachable' : r.status === 429 ? 'Too many tries. Wait five minutes' : r.status === 400 ? 'At least four characters' : 'Wrong passcode');
+});
+
+// ---- events from the laptop ----
+function connect() {
+  if (source) source.close();
+  source = new EventSource('/events');
+  source.onerror = () => {
+    S.server = 'offline';
+    fetch('/session').then(r => r.json()).then(s => { if (!s.ok) lock(); }).catch(() => {});
+  };
+  source.onmessage = e => {
+    const m = JSON.parse(e.data);
+    if (m.type === 'state') S.server = m.state;
+    else if (m.type === 'heard') addLine('you', m.text);
+    else if (m.type === 'reply') addLine('jarvis', m.text);
+    else if (m.type === 'audio') hear(m.id);
+  };
+}
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && !document.body.classList.contains('locked') && (!source || source.readyState === 2)) connect();
+});
+
+// ---- hearing Jarvis: each sentence arrives as its own clip and is played in turn ----
+let ctx = null, analyser = null, playUntil = 0, generation = 0, line = Promise.resolve();
+const sources = new Set();
+function sound() {
+  if (!ctx) {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 512;
+    analyser.connect(ctx.destination);
+  }
+  if (ctx.state !== 'running') ctx.resume();
+  return ctx;
+}
+const playing = () => !!ctx && ctx.currentTime < playUntil;
+function hear(id) {
+  if (!ctx) return;  // nothing has been tapped yet, so the phone would refuse to play it
+  const mine = generation;
+  const clip = fetch('/audio/' + id).then(r => r.arrayBuffer())
+    .then(data => new Promise((done, failed) => ctx.decodeAudioData(data, done, failed)));
+  line = line.then(() => clip).then(buffer => {
+    if (mine !== generation) return;
+    const node = ctx.createBufferSource();
+    node.buffer = buffer;
+    node.connect(analyser);
+    const at = Math.max(ctx.currentTime + .05, playUntil);
+    node.start(at);
+    playUntil = at + buffer.duration + .12;
+    sources.add(node);
+    node.onended = () => sources.delete(node);
+  }).catch(() => {});
+}
+function hush() {
+  generation++;
+  for (const node of sources) { try { node.stop(); } catch {} }
+  sources.clear();
+  playUntil = 0;
+}
+function interrupt() { hush(); S.sent = NEVER; post('/stop'); }
+$('stop').addEventListener('click', interrupt);
+
+// ---- talking to Jarvis: tap, speak, and it is sent when you pause (or tap again) ----
+let rec = null;
+async function listen() {
+  const audio = sound();
+  if (playing() || state() === 'thinking') interrupt();
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
+  } catch {
+    addLine('jarvis', 'The phone would not open its microphone. Allow microphone access for this page in Settings, then try again.');
+    return;
+  }
+  const input = audio.createMediaStreamSource(stream), tap = audio.createScriptProcessor(4096, 1, 1), silent = audio.createGain();
+  silent.gain.value = 0;
+  rec = { stream, input, tap, silent, chunks: [], seconds: 0, quiet: 0, started: false, floor: [] };
+  tap.onaudioprocess = e => {
+    if (!rec) return;
+    const data = new Float32Array(e.inputBuffer.getChannelData(0));
+    let sum = 0;
+    for (let i = 0; i < data.length; i++) sum += data[i] * data[i];
+    const level = Math.sqrt(sum / data.length), length = data.length / audio.sampleRate;
+    rec.chunks.push(data);
+    rec.seconds += length;
+    if (rec.floor.length < 3) rec.floor.push(level);  // the first quarter second measures the room
+    const speech = Math.max(.012, Math.min(...rec.floor) * 3);
+    S.mic = Math.min(level / (speech * 6), 1);
+    if (level > speech) { rec.started = true; rec.quiet = 0; } else rec.quiet += length;
+    if (!rec.started && rec.seconds > GIVE_UP) finish(false);
+    else if ((rec.started && rec.quiet >= QUIET_ENDS) || rec.seconds >= LONGEST) finish(true);
+  };
+  input.connect(tap); tap.connect(silent); silent.connect(audio.destination);
+  S.recording = true;
+}
+function finish(send) {
+  if (!rec) return;
+  const { stream, input, tap, silent, chunks, started } = rec;
+  rec = null;
+  S.recording = false; S.mic = 0;
+  input.disconnect(); tap.disconnect(); silent.disconnect();
+  stream.getTracks().forEach(track => track.stop());  // release the microphone, or the phone plays replies quietly through the earpiece
+  if (!send || !started) return;
+  // down to 16 kHz by averaging, then 16-bit samples
+  const total = chunks.reduce((n, c) => n + c.length, 0), all = new Float32Array(total);
+  let at = 0;
+  for (const c of chunks) { all.set(c, at); at += c.length; }
+  const step = ctx.sampleRate / SPEECH_RATE, out = new Int16Array(Math.floor(total / step));
+  for (let i = 0; i < out.length; i++) {
+    const from = Math.floor(i * step), to = Math.max(from + 1, Math.floor((i + 1) * step));
+    let sum = 0;
+    for (let j = from; j < to; j++) sum += all[j];
+    out[i] = Math.max(-1, Math.min(1, sum / (to - from))) * 32767;
+  }
+  S.sent = performance.now();
+  post('/voice', out.buffer, 'application/octet-stream').catch(() => addLine('jarvis', 'That did not reach the laptop.'));
+}
+$('talk').addEventListener('click', () => {
+  if (rec) finish(true);
+  else if (playing()) { sound(); interrupt(); }
+  else listen();
+});
+$('ask').addEventListener('submit', e => {
+  e.preventDefault();
+  sound();
+  const text = $('text').value.trim();
+  if (!text) return;
+  $('text').value = '';
+  $('text').blur();
+  hush();
+  S.sent = performance.now();
+  post('/ask', JSON.stringify({ text }));
+});
+
+// ---- reactor ----
+const canvas = $('hud'), g = canvas.getContext('2d');
+let W, H, cx, cy, R;
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  W = innerWidth; H = innerHeight;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cx = W / 2; cy = H * .33;
+  R = Math.min(W * .3, H * .19);
+  const talk = $('talk').style;
+  talk.left = cx + 'px'; talk.top = cy + 'px'; talk.width = talk.height = R * 2.7 + 'px';
+  $('hint').style.top = cy + R * 1.5 + 14 + 'px';
+  $('stop').style.top = cy + R * 1.5 + 44 + 'px';
+}
+addEventListener('resize', resize); resize();
+
+function arc(r, a0, a1, width, alpha, colour = RED) {
+  g.beginPath(); g.arc(0, 0, r, a0, a1);
+  g.lineWidth = width; g.strokeStyle = `rgba(${colour},${alpha})`; g.stroke();
+}
+function segments(r, count, gap, rotation, width, alpha) {
+  const step = TAU / count;
+  for (let i = 0; i < count; i++) arc(r, rotation + i * step, rotation + (i + 1) * step - gap, width, alpha);
+}
+const heard = new Uint8Array(512);
+function targetLevel(now, t) {
+  if (now === 'speaking') {
+    if (!playing()) return .3 + .15 * Math.sin(t * 7);  // Jarvis is speaking at the laptop, not here
+    analyser.getByteTimeDomainData(heard);
+    let sum = 0;
+    for (let i = 0; i < heard.length; i++) sum += (heard[i] - 128) ** 2;
+    return Math.min(1, Math.sqrt(sum / heard.length) / 128 * 5);
+  }
+  if (now === 'listening') return .12 + S.mic * .88;
+  if (now === 'thinking') return .3 + .15 * Math.sin(t * 5);
+  if (now === 'offline') return .02;
+  return .1 + .05 * Math.sin(t * 1.3);
+}
+
+let rotation = 0, last = 0;
+function frame(ms) {
+  const t = ms / 1000, dt = Math.min(t - last, .05); last = t;
+  show();
+  const now = state();
+  rotation += dt * (SPEED[now] || .3);
+  S.level += (targetLevel(now, t) - S.level) * Math.min(1, dt * 14);
+  const L = S.level;
+
+  g.clearRect(0, 0, W, H);
+  g.save(); g.translate(cx, cy); g.globalAlpha = now === 'offline' ? .35 : 1;
+
+  const halo = g.createRadialGradient(0, 0, 0, 0, 0, R * 2);
+  halo.addColorStop(0, `rgba(${RED},${.14 + L * .2})`); halo.addColorStop(1, `rgba(${RED},0)`);
+  g.fillStyle = halo; g.fillRect(-R * 2, -R * 2, R * 4, R * 4);
+
+  g.shadowColor = `rgba(${RED},.9)`; g.shadowBlur = 10;
+
+  // outer scale
+  for (let i = 0; i < 120; i++) {
+    const a = rotation * .2 + i * TAU / 120;
+    const len = R * (i % 10 === 0 ? .075 : i % 5 === 0 ? .045 : .022);
+    g.beginPath();
+    g.moveTo(Math.cos(a) * R * 1.3, Math.sin(a) * R * 1.3);
+    g.lineTo(Math.cos(a) * (R * 1.3 + len), Math.sin(a) * (R * 1.3 + len));
+    g.lineWidth = 1; g.strokeStyle = `rgba(${RED},${i % 5 === 0 ? .7 : .3})`; g.stroke();
+  }
+  arc(R * 1.27, 0, TAU, 1, .3);
+  segments(R * 1.17, 3, .55, -rotation * .6, R * .04, .55);
+  segments(R * 1.04, 60, .035, rotation * .4, R * .055, .2);
+  segments(R * .9, 4, .95, rotation * 1.3, 2, .85);
+  segments(R * .83, 2, 1.9, -rotation * 1.7, R * .022, .6);
+  if (now === 'thinking') arc(R * .97, rotation * 3, rotation * 3 + 1.3, R * .03, .95, HOT);
+
+  // voice ring
+  for (let i = 0; i < 96; i++) {
+    const a = i * TAU / 96 - Math.PI / 2;
+    const wobble = .5 + .5 * Math.sin(i * .9 + t * 6) * Math.sin(i * .37 - t * 3.1);
+    const height = R * (.015 + .24 * L * (.3 + .7 * wobble));
+    g.beginPath();
+    g.moveTo(Math.cos(a) * R * .52, Math.sin(a) * R * .52);
+    g.lineTo(Math.cos(a) * (R * .52 + height), Math.sin(a) * (R * .52 + height));
+    g.lineWidth = Math.max(1.5, R * .012); g.strokeStyle = `rgba(${HOT},${.45 + L * .55})`; g.stroke();
+  }
+  arc(R * .49, 0, TAU, 1.5, .75);
+
+  // core
+  const coreRadius = R * (.4 + L * .05);
+  const core = g.createRadialGradient(0, 0, 0, 0, 0, coreRadius);
+  core.addColorStop(0, `rgba(${RED},${.3 + L * .35})`); core.addColorStop(1, `rgba(${RED},.04)`);
+  g.fillStyle = core; g.beginPath(); g.arc(0, 0, coreRadius, 0, TAU); g.fill();
+  arc(coreRadius, 0, TAU, 2, .5 + L * .5);
+
+  g.restore();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+lock();
+</script>
+</body>
+</html>
